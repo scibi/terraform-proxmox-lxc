@@ -14,6 +14,10 @@ variable "defaults" {
     initialization_user_keys     = optional(list(string))
     initialization_user_password = optional(string)
     enable_netbox                = optional(bool)
+    prevent_destroy              = optional(bool)
+    dns_provider                 = optional(string)
+    dns_zone                     = optional(string)
+    dns_ttl                      = optional(number)
   })
   default = {}
 }
@@ -179,4 +183,32 @@ variable "provisioner_extra_commands" {
   type        = list(string)
   description = "Additional shell commands to run via remote-exec after container creation"
   default     = []
+}
+
+variable "prevent_destroy" {
+  type        = bool
+  description = "Prevent accidental container deletion. When true, any plan that would destroy the container (including force-replacement) will be rejected."
+  default     = null
+}
+
+variable "dns_provider" {
+  type        = string
+  description = "DNS provider: 'opnsense', 'rfc2136', or null to disable. Use 'rfc2136' for PowerDNS, Bind, Knot, etc."
+  default     = null
+  validation {
+    condition     = var.dns_provider == null || contains(["opnsense", "rfc2136"], var.dns_provider)
+    error_message = "dns_provider must be 'opnsense', 'rfc2136', or null"
+  }
+}
+
+variable "dns_zone" {
+  type        = string
+  description = "DNS zone with trailing dot, e.g. 'example.com.' (RFC2136). Derived from ct_name if null."
+  default     = null
+}
+
+variable "dns_ttl" {
+  type        = number
+  description = "DNS record TTL in seconds (RFC2136, default 3600)"
+  default     = null
 }

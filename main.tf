@@ -8,6 +8,14 @@ terraform {
       source  = "e-breuninger/netbox"
       version = "~> 5.1.0"
     }
+    opnsense = {
+      source  = "browningluke/opnsense"
+      version = "~> 0.16.1"
+    }
+    dns = {
+      source  = "hashicorp/dns"
+      version = "~> 3.4.0"
+    }
   }
 }
 
@@ -18,6 +26,7 @@ locals {
   os_template_file_id          = var.os_template_file_id != null ? var.os_template_file_id : try(var.defaults.os_template_file_ids[local.ct_os], var.defaults.os_template_file_id)
   os_type                      = var.os_type != null ? var.os_type : try(var.defaults.os_type, "unmanaged")
   enable_netbox                = var.enable_netbox != null ? var.enable_netbox : try(var.defaults.enable_netbox, true)
+  prevent_destroy              = coalesce(var.prevent_destroy, var.defaults.prevent_destroy, false)
   disk_datastore_id            = var.disk_datastore_id != null ? var.disk_datastore_id : try(var.defaults.disk_datastore_id, "local")
   initialization_dns_domain    = var.initialization_dns_domain != null ? var.initialization_dns_domain : var.defaults.initialization_dns_domain
   initialization_dns_servers   = var.initialization_dns_servers != null ? var.initialization_dns_servers : var.defaults.initialization_dns_servers
@@ -145,6 +154,16 @@ resource "proxmox_virtual_environment_container" "ct" {
     inline = concat([
       "echo '${split("/", var.network_interfaces[0].ipv4_address)[0]} ${var.ct_name} ${split(".", var.ct_name)[0]}' >> /etc/hosts",
     ], var.provisioner_extra_commands)
+  }
+}
+
+resource "terraform_data" "destroy_protection" {
+  count = local.prevent_destroy ? 1 : 0
+
+  triggers_replace = proxmox_virtual_environment_container.ct.id
+
+  lifecycle {
+    prevent_destroy = true
   }
 }
 
