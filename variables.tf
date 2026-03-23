@@ -142,6 +142,18 @@ variable "mount_points" {
   default     = []
 }
 
+variable "device_passthrough" {
+  type = list(object({
+    path       = string
+    deny_write = optional(bool, false)
+    gid        = optional(number)
+    uid        = optional(number)
+    mode       = optional(string)
+  }))
+  description = "Device passthrough configuration (e.g. /dev/dri for GPU)"
+  default     = []
+}
+
 variable "initialization_dns_domain" {
   type        = string
   description = "DNS domain"

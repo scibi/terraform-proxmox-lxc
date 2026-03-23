@@ -243,6 +243,58 @@ Mount point types:
 - **Bind mount** — set `volume` to a host path; requires `root@pam`
   authentication
 
+### Advanced — Jellyfin with GPU passthrough
+
+Media server container with AMD iGPU passthrough for hardware transcoding
+and an NFS bind mount for media files from a NAS:
+
+```hcl
+module "jellyfin" {
+  source    = "./modules/proxmox-lxc"
+  providers = { proxmox = proxmox.pve1 }
+
+  defaults    = local.cluster_defaults
+  ct_name     = "jellyfin.example.com"
+  ct_id       = 300
+  cpu_cores   = 4
+  memory_size = 4096
+  disk_size   = 8
+
+  unprivileged = true
+  features     = { nesting = true, keyctl = true }
+
+  network_interfaces = [{
+    name         = "eth0"
+    bridge       = "vmbr0"
+    ipv4_address = "10.0.0.50/24"
+  }]
+
+  # NFS share from NAS, pre-mounted on the Proxmox host at /mnt/pve/nas-media
+  mount_points = [
+    {
+      volume = "/mnt/pve/nas-media"
+      path   = "/mnt/media"
+    }
+  ]
+
+  # AMD Radeon iGPU (VAAPI) — gid 44 = video, gid 104 = render on Debian
+  device_passthrough = [
+    { path = "/dev/dri/card0", mode = "0666", gid = 44 },
+    { path = "/dev/dri/renderD128", mode = "0666", gid = 104 },
+  ]
+}
+```
+
+Prerequisites on the Proxmox host:
+
+- The NFS share must be mounted (e.g. via `/etc/fstab` or Proxmox storage
+  configuration) before creating the container
+- The `amdgpu` (or `i915` for Intel) kernel module must be loaded so that
+  `/dev/dri/card0` and `/dev/dri/renderD128` exist on the host
+- Inside the container, install Mesa drivers (`mesa-vulkan-drivers`,
+  `libgl1-mesa-dri`) and add the `jellyfin` user to the `video` and `render`
+  groups
+
 ### Advanced — multiple clusters with `count`
 
 When you need index arithmetic for node placement and IP calculation:
@@ -334,6 +386,7 @@ Special behaviors:
 | `disk_datastore_id` | `string` | `null` | no | Datastore for root filesystem |
 | `disk_size` | `number` | `4` | no | Root filesystem size in GB |
 | `mount_points` | `list(object)` | `[]` | no | Mount points (see below) |
+| `device_passthrough` | `list(object)` | `[]` | no | Device passthrough (see below) |
 | `initialization_dns_domain` | `string` | `null` | no | DNS domain |
 | `initialization_dns_servers` | `list(string)` | `null` | no | DNS servers |
 | `initialization_ipv4_gateway` | `string` | `null` | no | IPv4 gateway |
@@ -365,6 +418,16 @@ Special behaviors:
 | `shared` | `bool` | `false` | Mark as available on all nodes |
 | `replicate` | `bool` | `null` | Include in storage replica jobs |
 | `acl` | `bool` | `null` | Enable or disable ACL support |
+
+### `device_passthrough` object
+
+| Field | Type | Default | Description |
+| ------ | ---- | ------- | ----------- |
+| `path` | `string` | — | Device path on the host (e.g. `/dev/dri/card0`) |
+| `deny_write` | `bool` | `false` | Deny write access to the device |
+| `gid` | `number` | `null` | Group ID for the device inside the container |
+| `uid` | `number` | `null` | User ID for the device inside the container |
+| `mode` | `string` | `null` | File mode for the device (e.g. `0666`) |
 
 ## Outputs
 

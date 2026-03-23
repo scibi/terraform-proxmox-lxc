@@ -130,6 +130,17 @@ resource "proxmox_virtual_environment_container" "ct" {
     }
   }
 
+  dynamic "device_passthrough" {
+    for_each = var.device_passthrough
+    content {
+      path       = device_passthrough.value.path
+      deny_write = device_passthrough.value.deny_write
+      gid        = device_passthrough.value.gid
+      uid        = device_passthrough.value.uid
+      mode       = device_passthrough.value.mode
+    }
+  }
+
   startup {
     order      = "3"
     up_delay   = "60"
@@ -147,7 +158,7 @@ resource "proxmox_virtual_environment_container" "ct" {
   connection {
     type = "ssh"
     user = "root"
-    host = var.ct_name
+    host = split("/", var.network_interfaces[0].ipv4_address)[0]
   }
 
   provisioner "remote-exec" {
