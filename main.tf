@@ -191,9 +191,10 @@ resource "netbox_virtual_machine" "vm" {
   ])) * 1024
 
   vcpus = var.cpu_cores
-  local_context_data = jsonencode({
-    "ct_id" = proxmox_virtual_environment_container.ct.id
-  })
+  local_context_data = jsonencode(merge(
+    { "ct_id" = proxmox_virtual_environment_container.ct.id },
+    length(local.dns_cnames) > 0 ? { "dns_cnames" = local.dns_cnames } : {}
+  ))
   tags       = [data.netbox_tag.terraform[0].name]
   depends_on = [proxmox_virtual_environment_container.ct]
 }

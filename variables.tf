@@ -18,6 +18,7 @@ variable "defaults" {
     dns_provider                 = optional(string)
     dns_zone                     = optional(string)
     dns_ttl                      = optional(number)
+    dns_cnames                   = optional(list(string))
   })
   default = {}
 }
@@ -211,6 +212,12 @@ variable "dns_provider" {
     condition     = var.dns_provider == null || contains(["opnsense", "rfc2136"], var.dns_provider)
     error_message = "dns_provider must be 'opnsense', 'rfc2136', or null"
   }
+}
+
+variable "dns_cnames" {
+  type        = list(string)
+  description = "Optional list of CNAME FQDNs pointing to this container (e.g. ['alias.example.com'])"
+  default     = []
 }
 
 variable "dns_zone" {
