@@ -26,11 +26,11 @@ can be obtained in two ways.
 
 ### Declarative download with OpenTofu (recommended)
 
-Use the `proxmox_virtual_environment_download_file` resource to download
+Use the `proxmox_download_file` resource to download
 templates as part of your infrastructure code:
 
 ```hcl
-resource "proxmox_virtual_environment_download_file" "debian_13_lxc" {
+resource "proxmox_download_file" "debian_13_lxc" {
   content_type = "vztmpl"
   datastore_id = "local"
   node_name    = "pve1"
@@ -46,7 +46,7 @@ locals {
   cluster_defaults = {
     # ...
     os_template_file_ids = {
-      "debian13" = proxmox_virtual_environment_download_file.debian_13_lxc.id
+      "debian13" = proxmox_download_file.debian_13_lxc.id
     }
   }
 }
@@ -63,7 +63,7 @@ data "proxmox_virtual_environment_datastores" "local" {
   node_name = "pve1"
 }
 
-# After downloading templates (via proxmox_virtual_environment_download_file
+# After downloading templates (via proxmox_download_file
 # or pveam), reference them by their volume ID:
 locals {
   cluster_defaults = {
@@ -133,8 +133,8 @@ locals {
     node_name    = "pve1"
     ct_os        = "debian13"
     os_template_file_ids = {
-      "debian12" = proxmox_virtual_environment_download_file.debian_12_lxc.id
-      "debian13" = proxmox_virtual_environment_download_file.debian_13_lxc.id
+      "debian12" = proxmox_download_file.debian_12_lxc.id
+      "debian13" = proxmox_download_file.debian_13_lxc.id
     }
     os_type                     = "debian"
     disk_datastore_id           = "local-zfs"

@@ -1,6 +1,12 @@
 output "ct" {
-  value       = proxmox_virtual_environment_container.ct
-  description = "The Proxmox container resource"
+  value = {
+    id        = proxmox_virtual_environment_container.ct.id
+    vm_id     = proxmox_virtual_environment_container.ct.vm_id
+    node_name = proxmox_virtual_environment_container.ct.node_name
+    ipv4      = proxmox_virtual_environment_container.ct.ipv4
+    ipv6      = proxmox_virtual_environment_container.ct.ipv6
+  }
+  description = "Selected attributes of the Proxmox container resource"
 }
 output "netbox_vm" {
   value       = local.enable_netbox ? netbox_virtual_machine.vm[0] : null
