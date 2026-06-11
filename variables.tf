@@ -112,6 +112,7 @@ variable "network_interfaces" {
     vlan_id      = optional(number)
     ipv4_address = optional(string)
     ipv6_address = optional(string)
+    mac_address  = optional(string)
   }))
   description = "Network interfaces"
 }

@@ -20,6 +20,17 @@ terraform {
 }
 
 locals {
+  mac_address_by_iface = {
+    for iface in var.network_interfaces : iface.name => (
+      iface.mac_address != null ? iface.mac_address :
+      upper(format("BC:24:11:%s:%s:%s",
+        substr(md5("${var.ct_name}-${iface.name}"), 0, 2),
+        substr(md5("${var.ct_name}-${iface.name}"), 2, 2),
+        substr(md5("${var.ct_name}-${iface.name}"), 4, 2),
+      ))
+    )
+  }
+
   cluster_name                 = var.cluster_name != null ? var.cluster_name : var.defaults.cluster_name
   node_name                    = var.node_name != null ? var.node_name : var.defaults.node_name
   ct_os                        = var.ct_os != null ? var.ct_os : var.defaults.ct_os
@@ -85,10 +96,11 @@ resource "proxmox_virtual_environment_container" "ct" {
   dynamic "network_interface" {
     for_each = var.network_interfaces
     content {
-      name     = network_interface.value.name
-      bridge   = network_interface.value.bridge
-      firewall = network_interface.value.firewall
-      vlan_id  = network_interface.value.vlan_id
+      name        = network_interface.value.name
+      bridge      = network_interface.value.bridge
+      firewall    = network_interface.value.firewall
+      vlan_id     = network_interface.value.vlan_id
+      mac_address = local.mac_address_by_iface[network_interface.value.name]
     }
   }
 
