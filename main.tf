@@ -105,7 +105,7 @@ resource "proxmox_virtual_environment_container" "ct" {
   }
 
   initialization {
-    hostname = split(".", var.ct_name)[0]
+    hostname = var.ct_name
 
     dns {
       domain  = local.initialization_dns_domain
