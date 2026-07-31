@@ -207,11 +207,24 @@ variable "prevent_destroy" {
 
 variable "dns_provider" {
   type        = string
-  description = "DNS provider: 'opnsense', 'rfc2136', or null to disable. Use 'rfc2136' for PowerDNS, Bind, Knot, etc."
+  description = <<-EOT
+    DNS provider: 'opnsense', 'rfc2136', 'none', or null.
+
+    NOTE on 'null' vs 'none': OpenTofu/Terraform treat an explicitly-passed
+    `null` module argument as equivalent to *not passing it at all* when the
+    variable has `default = null` -- it does NOT force an override to "unset".
+    So if `defaults.dns_provider` is set (e.g. via a shared `locals` object),
+    passing `dns_provider = null` here will silently fall through to that
+    default instead of disabling DNS management, which is the opposite of
+    what one might expect. Use the explicit string `'none'` to actually
+    disable DNS record management for this instance regardless of
+    `defaults.dns_provider` (e.g. temporarily, while migrating a hostname that
+    already has a manually-managed DNS record pointing elsewhere).
+  EOT
   default     = null
   validation {
-    condition     = var.dns_provider == null || contains(["opnsense", "rfc2136"], var.dns_provider)
-    error_message = "dns_provider must be 'opnsense', 'rfc2136', or null"
+    condition     = var.dns_provider == null || contains(["opnsense", "rfc2136", "none"], var.dns_provider)
+    error_message = "dns_provider must be 'opnsense', 'rfc2136', 'none', or null"
   }
 }
 
