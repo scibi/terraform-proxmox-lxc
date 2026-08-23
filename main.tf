@@ -236,8 +236,8 @@ resource "netbox_interface" "iface" {
   name               = each.value.name
   # MAC: NetBox ≥ 4.5 / provider ≥ 5.7 — osobny obiekt netbox_mac_address
   # (pole mac_address na interfejsie jest tylko computed).
-  tags               = [data.netbox_tag.terraform[0].name]
-  depends_on         = [netbox_virtual_machine.vm]
+  tags       = [data.netbox_tag.terraform[0].name]
+  depends_on = [netbox_virtual_machine.vm]
 }
 
 resource "netbox_mac_address" "iface" {
