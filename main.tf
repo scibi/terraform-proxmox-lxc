@@ -6,7 +6,7 @@ terraform {
     }
     netbox = {
       source  = "e-breuninger/netbox"
-      version = "~> 5.2.1"
+      version = "~> 5.6"
     }
     opnsense = {
       source  = "browningluke/opnsense"
@@ -198,9 +198,9 @@ resource "netbox_virtual_machine" "vm" {
 
   name      = var.ct_name
   memory_mb = var.memory_size
-  disk_size_mb = (var.disk_size + sum([
+  disk_size_mb = (var.disk_size + sum(concat([0], [
     for mp in var.mount_points : try(tonumber(replace(mp.size, "G", "")), 0) if mp.size != null
-  ])) * 1024
+  ]))) * 1024
 
   vcpus = var.cpu_cores
   local_context_data = jsonencode(merge(
@@ -218,6 +218,7 @@ locals {
       "idx"          = i
       "conf"         = iface
       "name"         = iface.name
+      "mac_address"  = local.mac_address_by_iface[iface.name]
       "ipv4_address" = try(proxmox_virtual_environment_container.ct.ipv4[iface.name], null)
       "ipv6_address" = try(proxmox_virtual_environment_container.ct.ipv6[iface.name], null)
     }
@@ -233,8 +234,28 @@ resource "netbox_interface" "iface" {
 
   virtual_machine_id = netbox_virtual_machine.vm[0].id
   name               = each.value.name
+  # MAC: NetBox ≥ 4.5 / provider ≥ 5.7 — osobny obiekt netbox_mac_address
+  # (pole mac_address na interfejsie jest tylko computed).
   tags               = [data.netbox_tag.terraform[0].name]
   depends_on         = [netbox_virtual_machine.vm]
+}
+
+resource "netbox_mac_address" "iface" {
+  for_each = local.enable_netbox ? {
+    for k, v in local.interfaces : k => v if v.mac_address != null && v.mac_address != ""
+  } : {}
+
+  mac_address                  = upper(each.value.mac_address)
+  virtual_machine_interface_id = netbox_interface.iface[each.key].id
+  description                  = "${var.ct_name} (${each.value.name})"
+  tags                         = [data.netbox_tag.terraform[0].name]
+}
+
+resource "netbox_virtual_machine_interface_primary_mac_address" "iface" {
+  for_each = netbox_mac_address.iface
+
+  interface_id   = netbox_interface.iface[each.key].id
+  mac_address_id = each.value.id
 }
 
 resource "netbox_ip_address" "ipv4" {
