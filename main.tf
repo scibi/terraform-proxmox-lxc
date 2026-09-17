@@ -154,12 +154,12 @@ resource "proxmox_virtual_environment_container" "ct" {
   }
 
   startup {
-    order      = "3"
-    up_delay   = "60"
-    down_delay = "60"
+    order      = var.startup_order
+    up_delay   = var.startup_up_delay
+    down_delay = var.startup_down_delay
   }
 
-  start_on_boot = true
+  start_on_boot = var.start_on_boot
 
   lifecycle {
     ignore_changes = [

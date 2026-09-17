@@ -245,3 +245,27 @@ variable "dns_ttl" {
   description = "DNS record TTL in seconds (RFC2136, default 3600)"
   default     = null
 }
+
+variable "start_on_boot" {
+  type        = bool
+  description = "Start the container when the Proxmox node boots"
+  default     = true
+}
+
+variable "startup_order" {
+  type        = string
+  description = "Proxmox guest start/shutdown order (lower starts first, shuts down last)"
+  default     = "3"
+}
+
+variable "startup_up_delay" {
+  type        = string
+  description = "Seconds to wait after starting this guest before starting the next"
+  default     = "60"
+}
+
+variable "startup_down_delay" {
+  type        = string
+  description = "Seconds to wait after shutting down this guest before shutting down the next"
+  default     = "60"
+}

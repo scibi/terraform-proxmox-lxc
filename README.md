@@ -394,6 +394,10 @@ Special behaviors:
 | `initialization_user_password` | `string` | `null` | no | Password for root |
 | `enable_netbox` | `bool` | `null` | no | Create Netbox resources (fallback: `true`) |
 | `provisioner_extra_commands` | `list(string)` | `[]` | no | Additional shell commands run via remote-exec after creation |
+| `start_on_boot` | `bool` | `true` | no | Start the container when the Proxmox node boots |
+| `startup_order` | `string` | `"3"` | no | Proxmox start/shutdown order (lower starts first) |
+| `startup_up_delay` | `string` | `"60"` | no | Seconds to wait after starting this guest |
+| `startup_down_delay` | `string` | `"60"` | no | Seconds to wait after shutting down this guest |
 
 ### `network_interfaces` object
 
